@@ -1,0 +1,14 @@
+[Unit]
+Description=blte_exporter
+After=network.target
+ 
+[Service]
+Nice=10
+User=root
+Type=simple
+ExecStart=/usr/bin/btle_exporter --names-csv /etc/sensors
+RestartSec=10
+Restart=always
+ 
+[Install]
+WantedBy=multi-user.target
