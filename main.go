@@ -13,6 +13,7 @@ import (
 	"runtime"
 	"strconv"
 	"strings"
+	"sync"
 	"syscall"
 	"time"
 
@@ -103,6 +104,8 @@ var discoverMap = make(map[string]bool) // Mac -> Discovered?
 var timeOutMap = make(map[string]int64) // Mac -> Discovered?
 var namesMap = make(map[string]string)  // MAC -> Name
 
+var timeOutMutex = &sync.Mutex{}
+
 func bluetoothScan() error {
 	d, err := linux.NewDeviceWithName(flagAdapterID)
 	if err != nil {
@@ -147,7 +150,9 @@ func advScanHandler(a ble.Advertisement) {
 		metricsDeviceAdvertisementLastSeenGauge.With(label).Set(float64(time.Now().Unix()))
 		metricsAdvertisementSupportedCount.Inc()
 	}
+	timeOutMutex.Lock()
 	timeOutMap[a.Addr().String()] = time.Now().Unix()
+	timeOutMutex.Unlock()
 	metricsAdvertisementCount.Inc()
 
 	if !discoverMap[a.Addr().String()] || flagDebug {
